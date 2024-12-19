@@ -1,8 +1,7 @@
-// https://codeforces.com/problemset/problem/1887/B
+// https://codeforces.com/contest/1873/problem/H
 #include <bits/stdc++.h>
 using namespace std;
 using i64 = long long;
-// const int INF = 2e5 + 10;
 void __print(int x) {cerr << x;}
 void __print(long x) {cerr << x;}
 void __print(long long x) {cerr << x;}
@@ -33,48 +32,67 @@ void _print(T t, V... v) {__print(t); if (sizeof...(v)) cerr << ", "; _print(v..
 #endif
 
 void solve(){
-        int n, t;
-        cin >> n >> t;
-        vector<vector<pair<int, int>>>adj (n + 1);
-        for (int i = 1; i <= t; i++){
-            int m;
-            cin >> m; 
-            for (int j = 1; j <= m; j++){
-                int p, q;
-                cin >> p >> q;
-                adj[p].emplace_back(q ,i);
-                adj[q].emplace_back(p, i);
+    int n, a, b;
+    cin >> n >> a >> b;
+    vector<vector<int>> adj (n + 1);
+    for (int i = 0; i < n; i++){
+        int p, q;
+        cin >> p >> q;
+        adj[p].push_back(q);
+        adj[q].push_back(p);
+    }
+
+    vector<int> disA(n + 1, -1); 
+    vector<int> disB(n + 1, -1); 
+
+    // Find the closest point k from b to the circle. 
+    int k = -1;
+    vector<bool> visit (n + 1, false); 
+    auto dfs = [&](auto self, int u, int p) -> void {
+        if (k != -1) return; 
+        if (visit[u]){
+            k = u;
+            return;
+        }
+        visit[u] = true;
+        for (auto v : adj[u]) 
+            if (v != p) self(self, v, u);
+    };
+
+    dfs(dfs, b, -1);
+
+    auto bfs = [&](int s){
+        vector<int> dis(n + 1, -1);
+        queue<int> q; 
+        q.push(s);
+        dis[s] = 0;
+        while (!q.empty()){
+            int u = q.front();
+            q.pop();
+            for (auto v : adj[u]){
+                if (dis[v] != -1) continue;
+                dis[v] = dis[u] + 1; 
+                q.push(v);
             }
         }
+        return dis;
+    };
 
-        int k; 
-        cin >> k;
-        vector<vector<int>> a(t + 1);
-        for (int i = 1; i <= k; i++){
-            int val;
-            cin >> val;
-            a[val].push_back(i);
-        }
+    disA = bfs(a);
+    disB = bfs(b);
 
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> q; 
-    q.emplace(0, 1);
-    vector<int> dis(n + 1, -1);
-        
-    while (!q.empty()) {
-        auto [d, u] = q.top();
-        q.pop();
-        if (dis[u] != -1) continue;
-        dis[u] = d;
-        for (auto [v, t] : adj[u]){
-            auto it = upper_bound(a[t].begin(), a[t].end(), dis[u]);
-            if (it != a[t].end()) q.emplace(*it, v);
-        }
-    }
-    // dbg(dis);
-    std::cout << dis[n];
+    // dbg(disA);
+    // dbg(disB);
+    // std::cout << k;
+    std::cout << (disB[k] < disA[k] ? "YES\n" : "NO\n");
 }
+
 int main(){
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-    solve();
+    int T; 
+    cin >> T;
+    while (T--){
+        solve();
+    }
 }
